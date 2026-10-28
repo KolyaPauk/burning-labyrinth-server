@@ -1,0 +1,33 @@
+# Portable Node.js (downloaded by setup.bat)
+/runtime/
+
+# Local SQLite DB and process state
+/data/
+
+# Secrets & local config (created on first start)
+config.json
+.env
+.env.*
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+ehthumbs.db
+
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+*~
+*.sublime-project
+*.sublime-workspace

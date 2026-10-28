@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burning Labyrinth — Админ-панель</title>
+<style>
+  /* Brandbook O3: Pantone 2915 #5EB3E4, Black 6 #101820, Cool Gray 8 #898A8D, Cool Gray 5 #B1B1B1, Cool Gray 2 #D0CFCD. Font: TT Commons, fallback Arial. */
+  :root {
+    --blue: #5EB3E4;
+    --blue-soft: #E8F3FB;
+    --black: #101820;
+    --gray: #898A8D;
+    --gray-mid: #B1B1B1;
+    --gray-light: #D0CFCD;
+    --danger: #101820;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "TT Commons", Arial, sans-serif;
+    color: var(--black);
+    background: #fff;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* Brand ring: always touches the edge of the layout. */
+  .ring {
+    position: fixed;
+    right: -140px;
+    bottom: -140px;
+    width: 420px;
+    height: 420px;
+    border: 56px solid var(--blue);
+    border-radius: 50%;
+    opacity: .18;
+    pointer-events: none;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--gray-light);
+  }
+  header img { height: 56px; display: block; }
+  header h1 { margin: 0; font-size: 22px; font-weight: bold; color: var(--blue); }
+  main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 32px;
+    padding: 32px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  h2 { margin: 0 0 16px; font-size: 20px; font-weight: bold; color: var(--blue); }
+  .side { display: flex; flex-direction: column; gap: 24px; }
+  .card { border: 1px solid var(--gray-light); border-radius: 16px; padding: 24px; background: #fff; align-self: start; }
+  .status { border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; background: #F4F4F3; color: var(--gray); }
+  .status.active { background: var(--blue-soft); color: var(--black); }
+  .status b { display: block; font-size: 20px; margin-top: 4px; word-break: break-word; }
+  .status small { color: var(--gray); }
+  label { display: block; font-size: 14px; color: var(--gray); margin-bottom: 6px; }
+  input[type=text], input[type=password] {
+    width: 100%; font: inherit; font-size: 16px; padding: 12px 14px;
+    border: 1px solid var(--gray-mid); border-radius: 10px; color: var(--black);
+  }
+  input[type=text]:focus, input[type=password]:focus { outline: 2px solid var(--blue); border-color: var(--blue); }
+  .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: bold; font-size: 15px; cursor: pointer;
+    padding: 11px 20px; border-radius: 10px; border: 1px solid var(--blue);
+    background: var(--blue); color: #fff;
+  }
+  button:hover { filter: brightness(.94); }
+  button.ghost { background: #fff; color: var(--black); border-color: var(--gray-mid); }
+  button.icon { padding: 4px 10px; font-size: 14px; }
+  .hint { font-size: 13px; color: var(--gray); margin-top: 12px; line-height: 1.4; }
+  .name-hint { font-size: 14px; margin-top: 8px; min-height: 20px; color: var(--gray); }
+  .name-hint.ok { color: #2E7D32; }
+  .name-hint.taken { color: #B3261E; }
+  .name-hint button { margin-top: 8px; }
+  button:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  dialog { border: 1px solid var(--gray-light); border-radius: 16px; padding: 24px; width: 360px; max-width: 92vw; color: var(--black); font-family: inherit; }
+  dialog::backdrop { background: rgba(16, 24, 32, .45); }
+  .error { color: #B3261E; font-size: 14px; margin-top: 10px; min-height: 18px; }
+
+  /* Leaderboard: blue header and rank column, as in the in-game widget. */
+  .board { border-radius: 16px; overflow: hidden; border: 1px solid var(--gray-light); }
+  .board-title { background: var(--blue); color: #fff; font-weight: bold; font-size: 24px; text-align: center; padding: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 13px; font-weight: normal; color: var(--gray); padding: 10px 16px; border-bottom: 1px solid var(--gray-light); }
+  td { padding: 12px 16px; border-bottom: 1px solid #EEEEED; font-size: 16px; }
+  tr:last-child td { border-bottom: 0; }
+  td.rank { width: 64px; background: var(--blue); color: #fff; font-weight: bold; font-size: 18px; text-align: center; padding: 12px 0; border-bottom-color: #fff; }
+  td.name { font-weight: bold; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.score { font-weight: bold; }
+  td.ts { color: var(--gray); font-size: 14px; }
+  td.del { width: 56px; text-align: right; }
+  tbody tr:nth-child(-n+3) td:not(.rank) { background: var(--blue-soft); }
+  .empty { padding: 40px; text-align: center; color: var(--gray); }
+  .updated { font-size: 12px; color: var(--gray); margin-top: 10px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="ring"></div>
+<header>
+  <img src="/admin/logo.jpg" alt="O3">
+  <h1>Burning Labyrinth — Админ-панель</h1>
+</header>
+
+<main>
+  <div class="side">
+  <section class="card">
+    <h2>Сессия</h2>
+    <div id="status" class="status">Загрузка…</div>
+    <form id="form" autocomplete="off">
+      <label for="name">Имя игрока</label>
+      <input id="name" type="text" maxlength="64" placeholder="Например: Иван" required>
+      <div class="name-hint" id="nameHint"></div>
+      <div class="actions">
+        <button type="submit" id="startBtn">Начать сессию</button>
+        <button type="button" class="ghost" id="cancel" hidden>Отменить</button>
+      </div>
+      <div class="error" id="error"></div>
+    </form>
+    <div class="hint">Зарегистрируйте имя перед прохождением. Первый результат, пришедший из игры, будет записан под этим именем, после чего сессия закроется. Новая сессия отменяет предыдущую.</div>
+  </section>
+
+  </div>
+
+  <section>
+    <div class="board">
+      <div class="board-title">Общий рейтинг</div>
+      <div id="board"></div>
+    </div>
+    <div class="updated" id="updated"></div>
+  </section>
+</main>
+
+<dialog id="delDialog">
+  <form id="delForm" autocomplete="off">
+    <h2>Удаление результата</h2>
+    <div id="delInfo" class="hint" style="margin:0 0 14px"></div>
+    <label for="delPassword">Пароль администратора</label>
+    <input id="delPassword" type="password" required>
+    <div class="error" id="delError"></div>
+    <div class="actions">
+      <button type="submit">Удалить</button>
+      <button type="button" class="ghost" id="delCancel">Отмена</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmtDuration = (s) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+const fmtTime = (iso) => new Date(iso).toLocaleString('ru-RU');
+
+async function api(method, url, body, extraHeaders = {}) {
+  const res = await fetch(url, {
+    method,
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...extraHeaders },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });
+  return data;
+}
+
+function renderSession(session) {
+  const el = $('status');
+  el.className = 'status' + (session ? ' active' : '');
+  el.replaceChildren();
+  if (session) {
+    el.append('Ожидается результат для:');
+    const b = document.createElement('b');
+    b.textContent = session.Name;
+    el.append(b);
+    const small = document.createElement('small');
+    small.textContent = 'с ' + fmtTime(session.CreatedAt);
+    el.append(small);
+  } else {
+    el.textContent = 'Нет активной сессии. Результаты из игры не принимаются.';
+  }
+  $('cancel').hidden = !session;
+}
+
+function cell(cls, text) {
+  const td = document.createElement('td');
+  td.className = cls;
+  td.textContent = text;
+  return td;
+}
+
+function renderBoard(results) {
+  const box = $('board');
+  if (!results.length) {
+    box.className = 'empty';
+    box.textContent = 'Пока нет результатов';
+    return;
+  }
+  box.className = '';
+  const table = document.createElement('table');
+  table.innerHTML = '<thead><tr><th></th><th>Игрок</th><th class="num">Очки</th><th class="num">Время</th><th class="num">Бочки</th><th>Добавлен</th><th></th></tr></thead>';
+  const tbody = document.createElement('tbody');
+  results.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.append(cell('rank', i + 1), cell('name', r.Nickname), cell('num score', r.Score.toLocaleString('ru-RU')),
+      cell('num', fmtDuration(r.Duration)), cell('num', r.BarrelsCollected), cell('ts', fmtTime(r.Timestamp)));
+    const td = document.createElement('td');
+    td.className = 'del';
+    const btn = document.createElement('button');
+    btn.className = 'ghost icon';
+    btn.title = 'Удалить результат';
+    btn.textContent = '✕';
+    btn.onclick = () => askDelete(r);
+    td.append(btn);
+    tr.append(td);
+    tbody.append(tr);
+  });
+  table.append(tbody);
+  box.replaceChildren(table);
+}
+
+async function refresh() {
+  try {
+    const [{ session }, { results }] = await Promise.all([api('GET', '/api/admin/session'), api('GET', '/api/admin/results')]);
+    renderSession(session);
+    renderBoard(results);
+    $('updated').textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+  } catch (e) {
+    $('updated').textContent = 'Нет связи с сервером: ' + e.message;
+  }
+}
+
+// One result per name: the name is checked while typing; a taken name cannot start a session.
+let checkTimer, checkSeq = 0;
+
+function showName(info) {
+  const hint = $('nameHint');
+  hint.replaceChildren();
+  hint.className = 'name-hint';
+  $('startBtn').disabled = !!info && !info.available;
+  if (!info) return;
+  if (info.available) {
+    hint.classList.add('ok');
+    hint.textContent = 'Имя свободно';
+    return;
+  }
+  hint.classList.add('taken');
+  hint.append(`Имя «${info.name}» уже занято.`);
+  if (info.suggestion) {
+    hint.append(document.createElement('br'));
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ghost';
+    btn.textContent = `Использовать «${info.suggestion}»`;
+    btn.onclick = () => { $('name').value = info.suggestion; checkName(); $('name').focus(); };
+    hint.append(btn);
+  }
+}
+
+async function checkName() {
+  clearTimeout(checkTimer);
+  const seq = ++checkSeq;
+  const name = $('name').value.trim();
+  if (!name) return showName(null);
+  try {
+    const info = await api('GET', '/api/admin/name-check?name=' + encodeURIComponent(name));
+    if (seq === checkSeq) showName(info);
+  } catch { /* the server re-checks on submit */ }
+}
+
+$('name').oninput = () => {
+  $('error').textContent = '';
+  clearTimeout(checkTimer);
+  checkTimer = setTimeout(checkName, 250);
+};
+
+$('form').onsubmit = async (e) => {
+  e.preventDefault();
+  $('error').textContent = '';
+  try {
+    await api('POST', '/api/admin/session', { name: $('name').value });
+    $('name').value = '';
+    checkSeq++;
+    showName(null);
+    refresh();
+  } catch (err) {
+    if (err.status === 409) showName({ available: false, ...err.data });
+    else $('error').textContent = err.message;
+  }
+};
+$('cancel').onclick = async () => { await api('DELETE', '/api/admin/session'); refresh(); };
+
+// Deleting a result asks for the admin password every time.
+let pendingDelete = null;
+function askDelete(r) {
+  pendingDelete = r;
+  $('delInfo').textContent = `«${r.Nickname}», ${r.Score} очков`;
+  $('delPassword').value = '';
+  $('delError').textContent = '';
+  $('delDialog').showModal();
+  $('delPassword').focus();
+}
+$('delCancel').onclick = () => $('delDialog').close();
+$('delForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    await api('DELETE', `/api/admin/results/${pendingDelete.Id}`, null, {
+      'X-Admin-Password': encodeURIComponent($('delPassword').value),
+    });
+    $('delDialog').close();
+    refresh();
+    checkName(); // the freed name may be the one typed in the form
+  } catch (err) {
+    $('delError').textContent = err.message;
+    $('delPassword').select();
+  }
+};
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
