@@ -91,6 +91,10 @@ export function getActiveSession() {
   return toSession(db.prepare(`SELECT * FROM sessions WHERE status = 'active'`).get());
 }
 
+export function getLastEnteredName() {
+  return db.prepare(`SELECT name FROM sessions ORDER BY id DESC LIMIT 1`).get()?.name ?? null;
+}
+
 export function startSession(name) {
   db.exec('BEGIN IMMEDIATE');
   try {

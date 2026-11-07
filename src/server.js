@@ -184,12 +184,13 @@ async function handle(req, res) {
   // Game client API (requires X-Api-Key)
   if (p === '/api/results' && (m === 'GET' || m === 'POST')) {
     if (!checkApiKey(req, res)) return;
-    if (m === 'GET') return send(res, 200, { results: db.listResults() });
+    const body = () => ({ results: db.listResults(), lastNickname: db.getLastEnteredName() });
+    if (m === 'GET') return send(res, 200, body());
     const run = parseRunResult(await readJson(req));
     if (!db.submitResult(run)) {
-      return send(res, 409, { error: 'No active session. Register a session in the admin panel.', results: db.listResults() });
+      return send(res, 409, { error: 'No active session. Register a session in the admin panel.', ...body() });
     }
-    return send(res, 200, { results: db.listResults() });
+    return send(res, 200, body());
   }
 
   // Admin panel: open, only deleting results asks for the admin password.
