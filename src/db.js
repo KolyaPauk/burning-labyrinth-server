@@ -32,9 +32,16 @@ db.exec(`
     score            INTEGER NOT NULL,
     duration         REAL NOT NULL,
     barrels_collected INTEGER NOT NULL,
+    series_collected INTEGER NOT NULL DEFAULT 0,
     created_at       TEXT NOT NULL
   );
 `);
+
+// CREATE TABLE IF NOT EXISTS does not add columns to a database created before this field.
+const resultColumns = new Set(db.prepare(`PRAGMA table_info(results)`).all().map((column) => column.name));
+if (!resultColumns.has('series_collected')) {
+  db.exec(`ALTER TABLE results ADD COLUMN series_collected INTEGER NOT NULL DEFAULT 0`);
+}
 
 db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
 
@@ -116,7 +123,7 @@ export function cancelSession() {
 export function listResults() {
   return db
     .prepare(
-      `SELECT id, nickname, score, duration, barrels_collected, created_at
+      `SELECT id, nickname, score, duration, barrels_collected, series_collected, created_at
        FROM results ORDER BY score DESC, duration ASC, id ASC`,
     )
     .all()
@@ -126,6 +133,7 @@ export function listResults() {
       Score: r.score,
       Duration: r.duration,
       BarrelsCollected: r.barrels_collected,
+      SeriesCollected: r.series_collected,
       Timestamp: r.created_at,
     }));
 }
@@ -135,7 +143,7 @@ export function deleteResult(id) {
 }
 
 /** Stores the result under the active session's name and closes the session. Returns false if there is no active session. */
-export function submitResult({ score, duration, barrelsCollected }) {
+export function submitResult({ score, duration, barrelsCollected, seriesCollected }) {
   db.exec('BEGIN IMMEDIATE');
   try {
     const session = db.prepare(`SELECT * FROM sessions WHERE status = 'active'`).get();
@@ -145,9 +153,9 @@ export function submitResult({ score, duration, barrelsCollected }) {
     }
     const ts = now();
     db.prepare(
-      `INSERT INTO results (session_id, nickname, score, duration, barrels_collected, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    ).run(session.id, session.name, score, duration, barrelsCollected, ts);
+      `INSERT INTO results (session_id, nickname, score, duration, barrels_collected, series_collected, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(session.id, session.name, score, duration, barrelsCollected, seriesCollected, ts);
     db.prepare(`UPDATE sessions SET status = 'used', used_at = ? WHERE id = ?`).run(ts, session.id);
     db.exec('COMMIT');
     return true;

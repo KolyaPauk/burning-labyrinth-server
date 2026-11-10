@@ -28,5 +28,5 @@ Node.js (без npm-зависимостей) + SQLite (`node:sqlite`). БД: `d
 3. Результат записывается под именем из сессии (присланный Nickname игнорируется), сессия закрывается. Для следующего игрока зарегистрируйте новую.
 
 ## API игры (заголовок `X-Api-Key` обязателен)
-- `POST /api/results` с телом `{"Nickname","Score","Duration","BarrelsCollected"}`. Ответ `200 {"results":[{Nickname,Score,Duration,BarrelsCollected,Timestamp}, ...]}`. Без активной сессии `409 {"error", "results"}`.
+- `POST /api/results` с телом `{"Nickname","Score","Duration","BarrelsCollected","SeriesCollected"}`. Ответ `200 {"results":[{Nickname,Score,Duration,BarrelsCollected,SeriesCollected,Timestamp}, ...]}`. Без активной сессии `409 {"error", "results"}`.
 - `GET /api/results`: тот же список (лучшие первые: Score по убыванию, Duration по возрастанию).

@@ -206,12 +206,12 @@ function renderBoard(results) {
   }
   box.className = '';
   const table = document.createElement('table');
-  table.innerHTML = '<thead><tr><th></th><th>Игрок</th><th class="num">Очки</th><th class="num">Время</th><th class="num">Бочки</th><th>Добавлен</th><th></th></tr></thead>';
+  table.innerHTML = '<thead><tr><th></th><th>Игрок</th><th class="num">Очки</th><th class="num">Время</th><th class="num">Бочки</th><th class="num">Серии</th><th>Добавлен</th><th></th></tr></thead>';
   const tbody = document.createElement('tbody');
   results.forEach((r, i) => {
     const tr = document.createElement('tr');
     tr.append(cell('rank', i + 1), cell('name', r.Nickname), cell('num score', r.Score.toLocaleString('ru-RU')),
-      cell('num', fmtDuration(r.Duration)), cell('num', r.BarrelsCollected), cell('ts', fmtTime(r.Timestamp)));
+      cell('num', fmtDuration(r.Duration)), cell('num', r.BarrelsCollected), cell('num', r.SeriesCollected), cell('ts', fmtTime(r.Timestamp)));
     const td = document.createElement('td');
     td.className = 'del';
     const btn = document.createElement('button');

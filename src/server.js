@@ -162,10 +162,11 @@ function parseRunResult(body) {
   const score = Number(body.Score);
   const duration = Number(body.Duration);
   const barrels = Number(body.BarrelsCollected);
-  if (![score, duration, barrels].every(Number.isFinite) || duration < 0 || barrels < 0) {
-    throw new HttpError(400, 'Score, Duration and BarrelsCollected must be numbers (Duration, BarrelsCollected >= 0)');
+  const series = Number(body.SeriesCollected);
+  if (![score, duration, barrels, series].every(Number.isFinite) || duration < 0 || barrels < 0 || series < 0) {
+    throw new HttpError(400, 'Score, Duration, BarrelsCollected and SeriesCollected must be numbers (Duration, BarrelsCollected, SeriesCollected >= 0)');
   }
-  return { score: Math.round(score), duration, barrelsCollected: Math.round(barrels) };
+  return { score: Math.round(score), duration, barrelsCollected: Math.round(barrels), seriesCollected: Math.round(series) };
 }
 
 function nameInfo(name) {
